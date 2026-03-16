@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .container {
+            width: 380px;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: #667eea;
+            color: white;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #5563d1;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h2>Create Account</h2>
+
+        <form id="register-form">
+
+            <input type="text" placeholder="Full Name" id="full-name-input" required value="Guru Sevak Singh">
+
+            <input type="text" placeholder="Phone Number / User Name" id="phone_number-input" required value="7206662805">
+
+            <input type="password" placeholder="Password" id="password-input" required value="Guru@2003">
+
+            <input type="password" placeholder="Confirm Password" id="confirm-password-input" required value="Guru@2003">
+
+            <button type="submit">Register</button>
+
+        </form>
+
+        <div class="link">
+            Already have an account? <a href="{{ url_for('login_template') }}">Login</a>
+        </div>
+
+    </div>
+
+    
+    <script type="module" src="/static/js/register.js"></script>
+
+</body>
+
+</html>

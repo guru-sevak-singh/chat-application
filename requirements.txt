@@ -1,0 +1,35 @@
+# Main application
+fastapi
+
+# Server
+uvicorn[standard]
+
+# ORM for the database
+sqlalchemy
+
+# Load the Environment Variable
+python-dotenv
+
+# JWT signing & decoding
+python-jose[cryptography]==3.3.0
+
+# Password hashing (bcrypt)
+bcrypt
+
+# OAuth2 form parsing (needed for OAuth2PasswordRequestForm)
+python-multipart==0.0.9
+
+# Jinja templates
+aiofiles
+jinja2
+
+# testing
+pytest
+httpx
+
+
+# Rados
+redis 
+asyncio
+
+# message queue
