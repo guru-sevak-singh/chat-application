@@ -2,6 +2,6 @@ __pycache__/
 myenv/
 
 # sqlite database
-*.sqlite
-*.sqlite3
-*.db
+# *.sqlite
+# *.sqlite3
+# *.db
