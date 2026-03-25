@@ -29,7 +29,7 @@ httpx
 
 
 # Rados
-redis 
-asyncio
+# redis 
+# asyncio
 
 # message queue

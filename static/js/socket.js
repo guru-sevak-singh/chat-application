@@ -1,14 +1,10 @@
 const getSocketUrl = () => {
     const access_token = localStorage.getItem('access_token');
     const token_type = localStorage.getItem('token_type');
+    const webProtocol = window.location.protocol == "https:" ? "wss:" : "ws:"
 
-    let SOCKET_URL = `${window.location.host}/ws/?token=${token_type} ${access_token}`
-    if (window.location.href.includes('https://')) {
-        SOCKET_URL = "wss://" + SOCKET_URL
-    }
-    else {
-        SOCKET_URL = "ws://" + SOCKET_URL
-    }
+    let SOCKET_URL = `${webProtocol}//${window.location.host}/ws/?token=${token_type} ${access_token}`
+    
     return SOCKET_URL
 }
 

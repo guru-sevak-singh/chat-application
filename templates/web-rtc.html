@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebRTC App</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #left-panel {
+            width: 260px;
+            background: #111;
+            border-right: 1px solid #2a2a2a;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 16px;
+        }
+
+        #my-info {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+        }
+        #my-info .label { color: #888; font-size: 11px; }
+        #my-info .user-id { color: #00ff88; font-size: 13px; margin-top: 4px; }
+        #my-info .status-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #555;
+            margin-right: 6px;
+        }
+        #my-info .status-dot.online { background: #00ff88; }
+
+        #connect-btn {
+            width: 100%;
+            padding: 10px;
+            background: #00aa55;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        #connect-btn:hover { background: #00cc66; }
+        #connect-btn.disconnect { background: #aa2200; }
+        #connect-btn.disconnect:hover { background: #cc3300; }
+
+        #online-users-label {
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #users-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .user-card {
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .user-card .u-name { color: #ccc; font-size: 12px; }
+        .user-card .call-btn {
+            padding: 4px 10px;
+            background: #004488;
+            color: #88ccff;
+            border: 1px solid #226699;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 11px;
+        }
+        .user-card .call-btn:hover { background: #005599; }
+        .no-users { color: #444; font-size: 12px; text-align: center; padding: 20px 0; }
+
+        #right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+        }
+
+        #call-status-bar {
+            background: #1e1e1e;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #888;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
+        #call-status-bar.active  { color: #00ff88; border-color: #00aa55; }
+        #call-status-bar.ringing { color: #ffaa00; border-color: #aa7700; }
+        #call-status-bar.rejected{ color: #ff4444; border-color: #aa2200; }
+
+        #log-label {
+            color: #888;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #log {
+            flex: 1;
+            overflow-y: auto;
+            background: #0a0a0a;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #222;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .log-entry { font-size: 12px; line-height: 1.5; }
+        .log-entry.incoming { color: #00ff88; }
+        .log-entry.outgoing { color: #88aaff; }
+        .log-entry.system   { color: #ffaa00; }
+        .log-entry.error    { color: #ff4444; }
+
+        #incoming-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        #incoming-modal.show { display: flex; }
+
+        #modal-box {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 32px;
+            text-align: center;
+            min-width: 280px;
+        }
+        #modal-box .ring-icon { font-size: 40px; margin-bottom: 12px; }
+        #modal-box .from-text { color: #888; font-size: 12px; }
+        #modal-box .caller-id { color: #00ff88; font-size: 18px; margin: 8px 0 24px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: center; }
+
+        .accept-btn {
+            padding: 10px 24px;
+            background: #00aa55;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .accept-btn:hover { background: #00cc66; }
+
+        .reject-btn {
+            padding: 10px 24px;
+            background: #aa2200;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .reject-btn:hover { background: #cc3300; }
+    </style>
+</head>
+
+<body>
+
+    <div id="left-panel">
+        <div id="my-info">
+            <div class="label">Your ID</div>
+            <div class="user-id" id="display-user-id">—</div>
+            <div style="margin-top:8px; font-size:12px;">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="status-text">Offline</span>
+            </div>
+        </div>
+
+        <button id="connect-btn" onclick="toggleConnection()">Connect</button>
+        <div id="online-users-label">Online Users</div>
+        <div id="users-list">
+            <div class="no-users" id="no-users-msg">No users online</div>
+        </div>
+    </div>
+
+    <div id="right-panel">
+        <div id="call-status-bar">Idle — no active call</div>
+        <div id="log-label">Event Log</div>
+        <div id="log"></div>
+    </div>
+
+    <div id="incoming-modal">
+        <div id="modal-box">
+            <div class="ring-icon">📞</div>
+            <div class="from-text">Incoming call from</div>
+            <div class="caller-id" id="caller-id-text">—</div>
+            <div class="modal-actions">
+                <button class="accept-btn" onclick="acceptCall()">Accept</button>
+                <button class="reject-btn" onclick="rejectCall()">Reject</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let socket          = null;
+    let onlineUsers     = [];
+    let currentCallerId = null;   // who i am talking to (either direction)
+    let peerConnection  = null;
+    let stream          = null;
+
+    const userId = "user_" + Math.random().toString(36).substring(2, 7);
+    document.getElementById("display-user-id").textContent = userId;
+
+    // ─── LOGGING ──────────────────────────────────────────────────────
+    function log(message, type = "system") {
+        const logDiv = document.getElementById("log");
+        const entry  = document.createElement("div");
+        entry.className   = `log-entry ${type}`;
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        logDiv.appendChild(entry);
+        logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function setCallStatus(message, type = "") {
+        const bar = document.getElementById("call-status-bar");
+        bar.textContent = message;
+        bar.className   = type ? `active ${type}` : "";
+    }
+
+    // ─── USERS LIST UI ────────────────────────────────────────────────
+    function renderUsers() {
+        const list  = document.getElementById("users-list");
+        const noMsg = document.getElementById("no-users-msg");
+        list.querySelectorAll(".user-card").forEach(c => c.remove());
+
+        if (onlineUsers.length === 0) {
+            noMsg.style.display = "block";
+            return;
+        }
+        noMsg.style.display = "none";
+
+        onlineUsers.forEach(uid => {
+            const card = document.createElement("div");
+            card.className = "user-card";
+            card.id = `card-${uid}`;
+            card.innerHTML = `
+                <span class="u-name">${uid}</span>
+                <button class="call-btn" onclick="callUser('${uid}')">📞 Call</button>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    // ─── WEBSOCKET ────────────────────────────────────────────────────
+    function toggleConnection() {
+        socket ? socket.close() : connect();
+    }
+
+    function connect() {
+        const wsProtocal = window.location.protocol == "https:" ? "wss:" : "ws:";
+        const wsHost = window.location.host;
+        socket = new WebSocket(`${wsProtocal}//${wsHost}/web-rtc/${userId}`);
+
+        socket.onopen = () => {
+            document.getElementById("status-dot").classList.add("online");
+            document.getElementById("status-text").textContent = "Online";
+            document.getElementById("connect-btn").textContent = "Disconnect";
+            document.getElementById("connect-btn").classList.add("disconnect");
+            log(`Connected as ${userId}`, "system");
+        };
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            handleMessage(data);
+        };
+
+        socket.onclose = () => {
+            document.getElementById("status-dot").classList.remove("online");
+            document.getElementById("status-text").textContent = "Offline";
+            document.getElementById("connect-btn").textContent = "Connect";
+            document.getElementById("connect-btn").classList.remove("disconnect");
+            onlineUsers = [];
+            renderUsers();
+            setCallStatus("Idle — no active call");
+            log("Disconnected from server", "system");
+            socket = null;
+        };
+
+        socket.onerror = () => log("WebSocket error", "error");
+    }
+
+    // ─── WEBRTC SETUP — same for both caller and acceptor ─────────────
+    async function setupPeerConnection(targetId) {
+        if (stream == null) {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            log("Microphone access granted", "system");
+        }
+
+        peerConnection = new RTCPeerConnection({
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+        });
+
+        // browser found a network path — send it to other side
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket.send(JSON.stringify({
+                    type      : "ice-candidate",
+                    target    : targetId,
+                    candidate : event.candidate
+                }));
+                log(`→ ICE candidate sent`, "outgoing");
+            }
+        };
+
+        // remote audio arrived — play it
+        peerConnection.ontrack = (event) => {
+            log("🔊 Remote audio received!", "system");
+            const audio = new Audio();
+            audio.srcObject = event.streams[0];
+            audio.play();
+        };
+
+        // add our own mic to the connection
+        stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+        log("PeerConnection ready", "system");
+    }
+
+    // ─── MESSAGE HANDLER ──────────────────────────────────────────────
+    async function handleMessage(data) {
+        log(`← [${data.type}] ${JSON.stringify(data)}`, "incoming");
+
+        switch (data.type) {
+
+            case "connection-success":
+                break;
+
+            case "online-users":
+                // server tells us who is already online when we first connect
+                onlineUsers = data.users;
+                renderUsers();
+                break;
+
+            case "new-connection":
+                if (!onlineUsers.includes(data.user_id)) {
+                    onlineUsers.push(data.user_id);
+                    renderUsers();
+                }
+                break;
+
+            case "user-disconnect":
+                onlineUsers = onlineUsers.filter(u => u !== data.user_id);
+                renderUsers();
+                break;
+
+            case "incoming-call":
+                // User B — someone is calling me
+                currentCallerId = data.from;
+                document.getElementById("caller-id-text").textContent = data.from;
+                document.getElementById("incoming-modal").classList.add("show");
+                setCallStatus(`📞 Incoming call from ${data.from}...`, "ringing");
+                break;
+
+            case "call-rejected":
+                setCallStatus(`❌ ${data.from} rejected your call`, "rejected");
+                log(`${data.from} rejected the call`, "error");
+                setTimeout(() => setCallStatus("Idle — no active call"), 3000);
+                break;
+
+            case "call-accepted":
+                // User A — User B picked up, NOW create offer and start WebRTC
+                setCallStatus(`✅ ${data.from} accepted your call!`, "active");
+                log(`${data.from} accepted — starting WebRTC`, "system");
+
+                await setupPeerConnection(data.from);
+
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                socket.send(JSON.stringify({ type: "offer", target: data.from, sdp: offer }));
+                log(`→ Offer sent to ${data.from}`, "outgoing");
+                break;
+
+            case "offer":
+                // User B — received offer from User A
+                // setRemote → createAnswer → setLocal → send answer
+                log(`← Offer received from ${data.from}`, "system");
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                socket.send(JSON.stringify({ type: "answer", target: data.from, sdp: answer }));
+                log(`→ Answer sent to ${data.from}`, "outgoing");
+                break;
+
+            case "answer":
+                // User A — received answer from User B, complete the handshake
+                log(`← Answer received from ${data.from}`, "system");
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+                break;
+
+            case "ice-candidate":
+                // both sides — add the network path candidate
+                if (peerConnection) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                    log(`← ICE candidate added`, "system");
+                }
+                break;
+
+            case "error":
+                log(`Server error: ${data.message}`, "error");
+                break;
+        }
+    }
+
+    // ─── CALL ACTIONS ─────────────────────────────────────────────────
+    function callUser(targetId) {
+        if (!socket) { log("Not connected!", "error"); return; }
+
+        currentCallerId = targetId;
+        socket.send(JSON.stringify({ type: "call-request", target: targetId }));
+        log(`→ Call request sent to ${targetId}`, "outgoing");
+        setCallStatus(`📞 Calling ${targetId}...`, "ringing");
+    }
+
+    async function acceptCall() {
+        document.getElementById("incoming-modal").classList.remove("show");
+
+        // tell caller we picked up
+        socket.send(JSON.stringify({ type: "call-accepted", target: currentCallerId }));
+        log(`→ Accepted call from ${currentCallerId}`, "outgoing");
+        setCallStatus(`✅ In call with ${currentCallerId}`, "active");
+
+        // User B — setup mic and peerConnection
+        // offer will arrive in case "offer" above
+        await setupPeerConnection(currentCallerId);
+    }
+
+    function rejectCall() {
+        document.getElementById("incoming-modal").classList.remove("show");
+        socket.send(JSON.stringify({ type: "call-rejected", target: currentCallerId }));
+        log(`→ Rejected call from ${currentCallerId}`, "outgoing");
+        setCallStatus("Idle — no active call");
+        currentCallerId = null;
+    }
+</script>
+
+</body>
+</html>

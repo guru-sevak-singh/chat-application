@@ -5,7 +5,7 @@ from database import engine
 
 from models import Base
 
-from routers import users, auth, sockets, application, rooms
+from routers import users, auth, sockets, application, rooms, messages, web_rtc
 
 from fastapi.staticfiles import StaticFiles
 
@@ -31,6 +31,8 @@ app.include_router(auth.router)
 app.include_router(application.router)
 app.include_router(sockets.router)
 app.include_router(rooms.router)
+app.include_router(web_rtc.router)
+# app.include_router(messages.router)
 
 
 @app.get("/health-check", status_code=status.HTTP_200_OK)
