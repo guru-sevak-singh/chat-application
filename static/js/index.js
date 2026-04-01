@@ -176,3 +176,5 @@ SOCKET.onmessage = (e) => {
         }
     }
 }
+
+export { CONTACT_USER, ALL_CONTACTS }

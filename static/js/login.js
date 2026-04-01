@@ -28,7 +28,7 @@ LoginForm.addEventListener('submit', async (event)=> {
     if (access_token !== null && token_type !== null) {
         localStorage.setItem('access_token', response.access_token);
         localStorage.setItem('token_type', response.token_type);
-        
+        localStorage.setItem('user_id', phone_number);
         const home_url = window.location.origin;
         window.location.href = home_url;
         return

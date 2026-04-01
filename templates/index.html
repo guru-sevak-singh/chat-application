@@ -267,6 +267,82 @@
             }
 
         }
+
+        /* STYLE AFTER THE CALLING FEATURES */
+        #incoming-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        #incoming-modal.show {
+            display: flex;
+        }
+
+        #modal-box {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 32px;
+            text-align: center;
+            min-width: 280px;
+        }
+
+        #modal-box .ring-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        #modal-box .from-text {
+            color: #888;
+            font-size: 12px;
+        }
+
+        #modal-box .caller-id {
+            color: #00ff88;
+            font-size: 18px;
+            margin: 8px 0 24px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .accept-btn {
+            padding: 10px 24px;
+            background: #00aa55;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .accept-btn:hover {
+            background: #00cc66;
+        }
+
+        .reject-btn {
+            padding: 10px 24px;
+            background: #aa2200;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .reject-btn:hover {
+            background: #cc3300;
+        }
     </style>
 </head>
 
@@ -299,8 +375,8 @@
                 </div>
 
                 <div class="chat-buttons">
-                    <button>📞 Call</button>
-                    <button>🎥 Video</button>
+                    <button id="call-btn">📞 Call</button>
+                    <button id="video-call-btn">🎥 Video</button>
                 </div>
 
             </div>
@@ -333,6 +409,20 @@
 
     </div>
 
+    <!-- INCOMING CALL MODAL -->
+
+    <div id="incoming-modal">
+        <div id="modal-box">
+            <div class="ring-icon">📞</div>
+            <div class="from-text">Incoming call from</div>
+            <div class="caller-id" id="caller-id-text">—</div>
+            <div class="modal-actions">
+                <button class="accept-btn" id="accept-call-btn">Accept</button>
+                <button class="reject-btn" id="reject-call-btn">Reject</button>
+            </div>
+        </div>
+    </div>
+
     <script>
 
 
@@ -355,6 +445,8 @@
     </script>
 
     <script type="module" src="/static/js/index.js"></script>
+
+    <script type="module" src="/static/js/rtc/main.js"></script>
 
 </body>
 
