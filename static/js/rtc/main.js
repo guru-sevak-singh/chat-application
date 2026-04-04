@@ -4,7 +4,7 @@ let currentCallerId = null;
 let peerConnection = null;
 let stream = null;
 
-import { CONTACT_USER } from "../index.js";
+import { CONTACT_USER } from "/static/js/index.js";
 
 const userId = localStorage.getItem("user_id");
 
@@ -177,9 +177,3 @@ acceptCallBtn.addEventListener('click', async () => {
     await setUpPeerConnection(callerId);
     return;
 })
-
-// video call features
-const videoCallBtn = document.getElementById('video-call-btn');
-videoCallBtn.addEventListener('click', () => {
-    alert('Video call feature coming soon!');
-});

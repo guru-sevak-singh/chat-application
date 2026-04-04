@@ -46,6 +46,18 @@ class RtcManager:
 
 rtc_manager = RtcManager()
 
+class VideoRtcManager:
+    def __init__(self):
+        self.active_connections : dict[str, WebSocket] = {}
+    
+    async def connect(self, user_id : str, websocket : WebSocket):
+        await websocket.accept()
+        self.active_connections[user_id] = websocket
+    
+    def disconnect(self, user_id : str):
+        self.active_connections.pop(user_id, None)
+
+video_rtc_manager = VideoRtcManager()
 
 
 @router.websocket("/")
@@ -162,3 +174,83 @@ async def rtc_socket(websocket : WebSocket, phone_number : str):
 
     except WebSocketDisconnect:
         rtc_manager.disconnect(phone_number)
+
+@router.websocket("/video-call/{phone_number}")
+async def video_rtc_socket(websocket : WebSocket, phone_number : str):
+    await video_rtc_manager.connect(phone_number, websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            msg_type = data.get("type")
+
+            match msg_type:
+                case "call-request":
+                    to = data.get("to")
+                    target_websocket = video_rtc_manager.active_connections.get(to)
+                    if target_websocket:
+                        await target_websocket.send_json(
+                            {
+                                "type": "incoming-call",
+                                "from": phone_number
+                            }
+                        )
+                    else:
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "msg": f"Person with phone number : {to} is not online, Try after some time"
+                            }
+                        )
+                
+                case "call-reject":
+                    whose = data.get("whose")
+                    target_websocket = video_rtc_manager.active_connections.get(whose)
+                    if target_websocket:
+                        await target_websocket.send_json(
+                            {
+                                "type": "call-reject",
+                                "by": phone_number
+                            }
+                        )
+                
+                case "call-accept":
+                    targetId = data.get("targetId")
+                    target_websocket = video_rtc_manager.active_connections.get(targetId)
+                    if target_websocket:
+                        await target_websocket.send_json({
+                            "type": "call-accepted",
+                            "from": phone_number
+                        })
+                
+                case "offer":
+                    targetId = data.get("targetId")
+                    
+                    target_websocket = video_rtc_manager.active_connections.get(targetId)
+                    if target_websocket:
+                        await target_websocket.send_json({
+                            **data,
+                            "from": phone_number
+                        })
+                
+                case "answer":
+                    targetId = data.get("targetId")
+                    target_websocket = video_rtc_manager.active_connections.get(targetId)
+                    if target_websocket:
+                        await target_websocket.send_json({
+                            **data,
+                            "from": phone_number
+                        })
+                
+                case "ice-candidate":
+                    targetId = data.get("targetId")
+                    target_websocket = video_rtc_manager.active_connections.get(targetId)
+                    if target_websocket:
+                        await target_websocket.send_json({
+                            **data,
+                            "from": phone_number
+                        })
+            
+    except WebSocketDisconnect:
+        video_rtc_manager.disconnect(phone_number)
+    except Exception as e:
+        print(f"Error in video RTC socket: {e}")

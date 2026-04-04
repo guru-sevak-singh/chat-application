@@ -268,7 +268,8 @@
 
         }
 
-        /* STYLE AFTER THE CALLING FEATURES */
+        /* ─── INCOMING AUDIO CALL MODAL ─── */
+
         #incoming-modal {
             display: none;
             position: fixed;
@@ -303,6 +304,47 @@
         }
 
         #modal-box .caller-id {
+            color: #00ff88;
+            font-size: 18px;
+            margin: 8px 0 24px;
+        }
+
+        /* ─── INCOMING VIDEO RING MODAL ─── */
+
+        #incoming-video-call-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        #incoming-video-call-modal.show {
+            display: flex;
+        }
+
+        #modal-video-box {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 32px;
+            text-align: center;
+            min-width: 280px;
+        }
+
+        #modal-video-box .ring-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        #modal-video-box .from-text {
+            color: #888;
+            font-size: 12px;
+        }
+
+        #modal-video-box .caller-id {
             color: #00ff88;
             font-size: 18px;
             margin: 8px 0 24px;
@@ -343,6 +385,151 @@
         .reject-btn:hover {
             background: #cc3300;
         }
+
+        /* ─────────────────────────────────────────
+           FULLSCREEN VIDEO CALL SCREEN
+           Like Google Meet / WhatsApp video call
+        ───────────────────────────────────────── */
+
+        #video-call-screen {
+            display: none;               /* hidden by default, show via JS */
+            position: fixed;
+            inset: 0;                    /* covers full screen */
+            background: #0d0d0d;
+            z-index: 200;
+        }
+
+        #video-call-screen.show {
+            display: block;
+        }
+
+        /* Remote video — fills the entire screen */
+        #remoteVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;           /* fill without stretching */
+            display: block;
+        }
+
+        /* 
+            When remote video has no stream yet 
+            (waiting for peer to connect) show a 
+            dark placeholder with a message 
+        */
+        #remoteVideo:not([srcObject]) {
+            background: #1a1a2e;
+        }
+
+        /* Remote user name — top left overlay */
+        #remote-user-name {
+            position: absolute;
+            top: 20px;
+            left: 24px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.45);
+            padding: 6px 14px;
+            border-radius: 20px;
+            backdrop-filter: blur(6px);
+            letter-spacing: 0.4px;
+        }
+
+        /* 
+            Local video — picture-in-picture style
+            bottom-right corner, small box 
+        */
+        #localVideo {
+            position: absolute;
+            bottom: 100px;               /* above the control bar */
+            right: 20px;
+            width: 160px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            cursor: pointer;             /* allow drag later if needed */
+            background: #222;
+        }
+
+        /* ─── BOTTOM CONTROL BAR ─── */
+
+        #video-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+            padding-bottom: 12px;
+        }
+
+        .ctrl-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: white;
+            padding: 10px 22px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 20px;
+            backdrop-filter: blur(8px);
+            transition: background 0.2s ease;
+            min-width: 80px;
+        }
+
+        .ctrl-btn span {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .ctrl-btn:hover {
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        /* Active/muted state — button turns red tint */
+        .ctrl-btn.active {
+            background: rgba(220, 53, 69, 0.35);
+            border-color: rgba(220, 53, 69, 0.5);
+        }
+
+        /* End call button — always red */
+        .ctrl-btn.end-call-btn {
+            background: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .ctrl-btn.end-call-btn:hover {
+            background: #c82333;
+        }
+
+        /* ─── MOBILE ADJUSTMENTS ─── */
+        @media (max-width: 768px) {
+
+            #localVideo {
+                width: 110px;
+                height: 80px;
+                bottom: 90px;
+                right: 12px;
+            }
+
+            .ctrl-btn {
+                padding: 10px 16px;
+                min-width: 68px;
+                font-size: 18px;
+            }
+
+        }
+
     </style>
 </head>
 
@@ -409,7 +596,7 @@
 
     </div>
 
-    <!-- INCOMING CALL MODAL -->
+    <!-- INCOMING AUDIO CALL MODAL -->
 
     <div id="incoming-modal">
         <div id="modal-box">
@@ -423,8 +610,63 @@
         </div>
     </div>
 
-    <script>
+    <!-- INCOMING VIDEO RING MODAL (shows before accepting) -->
 
+    <div id="incoming-video-call-modal">
+        <div id="modal-video-box">
+            <div class="ring-icon">📷</div>
+            <div class="from-text">Incoming Video from</div>
+            <div class="caller-id" id="caller-id-text-for-video">—</div>
+            <div class="modal-actions">
+                <button class="accept-btn" id="accept-video-btn">Accept</button>
+                <button class="reject-btn" id="reject-video-btn">Reject</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+        FULLSCREEN VIDEO CALL SCREEN
+        Hidden by default — show this when call is accepted
+        Add class "show" via JS to display it
+    -->
+    <div id="video-call-screen">
+
+        <!-- Remote video — takes full screen background -->
+        <video id="remoteVideo" autoplay playsinline></video>
+
+        <!-- Remote user name label — top left -->
+        <div id="remote-user-name">—</div>
+
+        <!-- 
+            Local video — picture-in-picture
+            bottom right corner, small box
+            muted so you don't hear your own voice echo
+        -->
+        <video id="localVideo" autoplay muted playsinline></video>
+
+        <!-- Bottom control buttons -->
+        <div id="video-controls">
+
+            <button class="ctrl-btn" id="toggle-mic-btn">
+                🎙️
+                <span>Mute</span>
+            </button>
+
+            <button class="ctrl-btn" id="toggle-cam-btn">
+                📷
+                <span>Camera</span>
+            </button>
+
+            <button class="ctrl-btn end-call-btn" id="end-video-call-btn">
+                📵
+                <span>End</span>
+            </button>
+
+        </div>
+
+    </div>
+
+    <script>
 
         function addUser() {
 
@@ -447,6 +689,8 @@
     <script type="module" src="/static/js/index.js"></script>
 
     <script type="module" src="/static/js/rtc/main.js"></script>
+
+    <script type="module" src="/static/js/video-rtc/main.js"></script>
 
 </body>
 
