@@ -249,6 +249,16 @@ async def video_rtc_socket(websocket : WebSocket, phone_number : str):
                             **data,
                             "from": phone_number
                         })
+                
+                case "call-end":
+                    targetId = data.get("targetId")
+                    target_websocket = video_rtc_manager.active_connections.get(targetId)
+                    if target_websocket:
+                        await target_websocket.send_json({
+                            **data,
+                            "from": phone_number
+                        })
+                    
             
     except WebSocketDisconnect:
         video_rtc_manager.disconnect(phone_number)

@@ -54,7 +54,7 @@ function initializeWebSocket() {
                 document.getElementById('incoming-video-call-modal').setAttribute('class', '');
 
                 document.getElementById('video-call-screen').setAttribute('class', 'show');
-
+                document.getElementById('remote-user-name').innerText = eventData.from;
                 break;
 
             case "offer":
@@ -72,7 +72,7 @@ function initializeWebSocket() {
                     })
                 );
                 break;
-            
+
             case "answer":
                 await peerConnection.setRemoteDescription(
                     new RTCSessionDescription(eventData.sdp)
@@ -86,6 +86,12 @@ function initializeWebSocket() {
                     )
                 }
                 break;
+
+            case "call-end":
+                if (peerConnection) {
+                    document.getElementById('remote-user-name').innerText = '—'
+                    document.getElementById('video-call-screen').setAttribute('class', '');
+                }
         }
     }
 }
@@ -173,9 +179,10 @@ acceptCallBtn.addEventListener('click', async () => {
     const callerId = document.getElementById('caller-id-text-for-video').innerText;
     document.getElementById("caller-id-text-for-video").innerText = '—';
     document.getElementById('incoming-video-call-modal').setAttribute('class', '');
-    
+
     document.getElementById('video-call-screen').setAttribute('class', 'show');
-    
+    document.getElementById('remote-user-name').innerText = callerId
+
     await setUpPeerConnection(callerId);
     socket.send(
         JSON.stringify({
@@ -184,4 +191,43 @@ acceptCallBtn.addEventListener('click', async () => {
         })
     )
     return
+})
+
+
+const toggleMicBtn = document.getElementById('toggle-mic-btn');
+toggleMicBtn.addEventListener('click', () => {
+    const audioTrack = stream.getAudioTracks()[0];
+    audioTrack.enabled = !audioTrack.enabled //toggle
+    const style_classes = audioTrack.enabled ? "ctrl-btn" : "ctrl-btn end-call-btn";
+    toggleMicBtn.setAttribute('class', style_classes);
+});
+
+const toogleCameraBtn = document.getElementById('toggle-cam-btn');
+toogleCameraBtn.addEventListener('click', () => {
+    const videoTrack = stream.getVideoTracks()[0];
+    videoTrack.enabled = !videoTrack.enabled; // toogle
+    const style_classes = videoTrack.enabled ? "ctrl-btn" : "ctrl-btn end-call-btn";
+    toogleCameraBtn.setAttribute('class', style_classes)
+});
+
+function endCall() {
+    // stop all tracks;
+    stream.getTracks().forEach(track => track.stop());
+
+    // close the peer to peer connection
+    peerConnection.close();
+
+    socket.send(JSON.stringify(
+        {
+            type: 'call-end',
+            targetId: document.getElementById('remote-user-name').innerText.trim()
+        }
+    ))
+    document.getElementById('remote-user-name').innerText = '—'
+    document.getElementById('video-call-screen').setAttribute('class', '');
+}
+
+const endCallBtn = document.getElementById('end-video-call-btn');
+endCallBtn.addEventListener('click', () => {
+    endCall();
 })
